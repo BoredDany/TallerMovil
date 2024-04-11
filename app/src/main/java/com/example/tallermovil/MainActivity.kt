@@ -14,9 +14,18 @@ class MainActivity : AppCompatActivity() {
         val contactsBtn = findViewById<ImageButton>(R.id.contactBtn)
         val mapBtn = findViewById<ImageButton>(R.id.mapBtn)
 
-        camBtn.setOnClickListener { }
-        contactsBtn.setOnClickListener {  }
-        mapBtn.setOnClickListener {  }
+        camBtn.setOnClickListener {
+
+        }
+
+        contactsBtn.setOnClickListener {
+            val intent = Intent(this, ContactsActivity::class.java)
+            startActivity(intent)
+        }
+
+        mapBtn.setOnClickListener {
+
+        }
 
     }
 }
