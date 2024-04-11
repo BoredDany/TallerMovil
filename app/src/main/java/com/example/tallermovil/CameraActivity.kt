@@ -23,7 +23,7 @@ class CameraActivity : AppCompatActivity() {
         setContentView(R.layout.activity_camera)
 
         //pedir permisos de camara y galeria
-        //permisoCamara()
+        permisoCamara()
         permisoGaleria()
 
         val btnCamera = findViewById<Button>(R.id.camBtn)
