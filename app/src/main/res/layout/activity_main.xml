@@ -10,22 +10,28 @@
 
     <ImageButton
         android:id="@+id/contactBtn"
-        android:layout_width="250dp"
-        android:layout_height="250dp"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
         android:adjustViewBounds="true"
         android:layout_marginBottom="30dp"
+        android:scaleType="fitCenter"
+        android:background="@color/white"
         app:srcCompat="@drawable/contacts" />
 
     <ImageButton
         android:id="@+id/camBtn"
-        android:layout_width="250dp"
-        android:layout_height="250dp"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
         android:layout_marginBottom="30dp"
+        android:scaleType="fitCenter"
+        android:background="@color/white"
         app:srcCompat="@drawable/camera" />
 
     <ImageButton
         android:id="@+id/mapBtn"
-        android:layout_width="250dp"
-        android:layout_height="250dp"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:scaleType="fitCenter"
+        android:background="@color/white"
         app:srcCompat="@drawable/osmap" />
 </LinearLayout>

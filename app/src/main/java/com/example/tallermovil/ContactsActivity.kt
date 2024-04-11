@@ -27,7 +27,20 @@ class ContactsActivity : AppCompatActivity() {
         mContactsAdapter = ContactAdapter(this, null, 0)
         mlista?.adapter = mContactsAdapter
 
-        initView()
+        if (ContextCompat.checkSelfPermission(
+                this, android.Manifest.permission.READ_CONTACTS
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            // Si los permisos están concedidos, inicializa la vista
+            initView()
+        } else {
+            // Solicita permisos si no están concedidos
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.READ_CONTACTS),
+                Permission.REQUEST_READ_CONTACTS
+            )
+        }
 
         mlista.setOnItemClickListener { parent, view, position, id ->
             val cursor = mContactsAdapter!!.cursor
@@ -47,6 +60,7 @@ class ContactsActivity : AppCompatActivity() {
                 this, android.Manifest.permission.READ_CONTACTS
             ) == PackageManager.PERMISSION_GRANTED -> {
                 Toast.makeText(this, "Puede ver contactos", Toast.LENGTH_SHORT).show()
+                initView()
             }
             ActivityCompat.shouldShowRequestPermissionRationale(
                 this, android.Manifest.permission.READ_CONTACTS) -> {
@@ -72,7 +86,7 @@ class ContactsActivity : AppCompatActivity() {
         when(requestCode){
             Permission.REQUEST_READ_CONTACTS ->{
                 if (requestCode == Permission.REQUEST_READ_CONTACTS && resultCode == RESULT_OK) {
-                    //ok
+                    initView()
                 }
             }
         }
@@ -86,6 +100,7 @@ class ContactsActivity : AppCompatActivity() {
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     // Permission is granted. Continue the action or workflow
                     // in your app.
+                    initView()
                     Toast.makeText(this, "Gracias contactos", Toast.LENGTH_SHORT).show()
                 } else {
                     // Explain to the user that the feature is unavailable
