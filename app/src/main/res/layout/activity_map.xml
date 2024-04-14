@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="text"
-        android:text="Ingrese una direccion"
+        android:hint="Ingrese una direccion"
         android:padding="10dp"
         android:background="@drawable/round_corner"
         android:layout_marginStart="10dp"

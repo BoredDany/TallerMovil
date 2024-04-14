@@ -108,40 +108,40 @@ class MapActivity : AppCompatActivity() {
         }
 
         val editText = findViewById<EditText>(R.id.editTextGeocoder)
-        val addressString = editText.toString()
 
+        //encontrar lugar y mostrar
         editText.setOnEditorActionListener { v, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_SEND) {
+                val addressString = editText.text.toString()
                 if (addressString.isNotEmpty()) {
                     try {
                         if (map != null && mGeocoder != null) {
-                            val addresses = mGeocoder!!.getFromLocationName(addressString, 2)
+                            val addresses = mGeocoder!!.getFromLocationName(addressString, 1)
                             if (addresses != null && addresses.isNotEmpty()) {
                                 val addressResult = addresses[0]
                                 val position = GeoPoint(addressResult.latitude, addressResult.longitude)
-                                Log.i("GEOCODERRR", "Longitud: " + addressResult.longitude)
-                                //Agregar Marcador al mapa
-                                val marker = Marker(map)
-                                marker.title = "Mi Marcador"
-                                val myIcon = resources.getDrawable(
-                                    R.drawable.baseline_location_on_24,
-                                    theme)
-                                marker.icon = myIcon
-                                marker.position = position
-                                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                                map!!.overlays.add(marker)
 
-                                map!!.controller.setCenter(marker.position)
-                            }
+                                Log.i("Geocoder", "Dirección encontrada: ${addressResult.getAddressLine(0)}")
+                                Log.i("Geocoder", "Latitud: ${addressResult.latitude}, Longitud: ${addressResult.longitude}")
+
+                                //Agregar Marcador al mapa
+                                val marker = createMarker(position, addressString, null, R.drawable.baseline_location_on_24)
+                                marker?.let { map!!.overlays.add(it) }
+                                map!!.controller.setCenter(marker!!.position)
+
                             } else {
+                                Log.i("Geocoder", "Dirección no encontrada:" + addressString)
                                 Toast.makeText(this, "Dirección no encontrada", Toast.LENGTH_SHORT)
                                     .show()
                             }
+                        }
                     } catch (e: IOException) {
                         e.printStackTrace()
                     }
+
                 } else {
                     Toast.makeText(this, "La dirección esta vacía", Toast.LENGTH_SHORT).show()
+
                 }
 
             }
@@ -193,7 +193,6 @@ class MapActivity : AppCompatActivity() {
 
 
 }
-
 
     private fun checkLocationPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
@@ -285,7 +284,8 @@ class MapActivity : AppCompatActivity() {
 
     private fun longPressOnMap(p: GeoPoint) {
         longPressedMarker?.let { map!!.overlays.remove(it) }
-        longPressedMarker = createMarker(p, "location", null, R.drawable.baseline_location_on_24)
+        val address = getLocationName(p.latitude, p.longitude)
+        longPressedMarker = createMarker(p, address, null, R.drawable.baseline_location_on_24)
         longPressedMarker?.let { map!!.overlays.add(it) }
 
 
@@ -297,7 +297,10 @@ class MapActivity : AppCompatActivity() {
                     val startPoint = GeoPoint(location.latitude, location.longitude);
                     mapController.setCenter(startPoint);
 
-                    longPressedMarker = createMarker(startPoint, "location", null, R.drawable.baseline_location_on_24)
+                    Log.i("LOCATION", "onSuccess location:" + location.latitude + " - " + location.longitude)
+                    val address = getLocationName(location.latitude, location.longitude)
+
+                    longPressedMarker = createMarker(startPoint, address, null, R.drawable.baseline_location_on_24)
                     longPressedMarker?.let { map!!.overlays.add(it) }
 
                     drawRoute(startPoint,p)
@@ -338,5 +341,25 @@ class MapActivity : AppCompatActivity() {
             roadOverlay?.outlinePaint?.strokeWidth = 10f
             map!!.overlays.add(roadOverlay)
         }
+    }
+
+    private fun getLocationName (latitude: Double, longitude: Double): String{
+        var addressFound = ""
+        try {
+            val maxResults = 1
+            val addresses = mGeocoder?.getFromLocation(latitude, longitude, maxResults)
+
+            if (addresses != null  && addresses.isNotEmpty()) {
+                val address = addresses[0]
+                Log.i("Geocoder", "Dirección encontrada: ${address.getAddressLine(0)}")
+                Log.i("Geocoder", "Latitud: ${address.latitude}, Longitud: ${address.longitude}")
+                addressFound = address.getAddressLine(0).toString()
+            } else {
+                Log.i("Geocoder", "No se encontró ninguna dirección: " + latitude + " - " + longitude)
+            }
+        } catch (e: IOException) {
+            Log.e("Geocoder", "Error en el geocodificador: ${e.message}")
+        }
+        return addressFound
     }
 }
