@@ -49,5 +49,6 @@ dependencies {
 
     implementation ("org.osmdroid:osmdroid-android:6.1.18")
     implementation ("com.github.MKergall:osmbonuspack:6.9.0")
+    implementation ("com.squareup.okhttp3:okhttp:3.2.0")
 
 }

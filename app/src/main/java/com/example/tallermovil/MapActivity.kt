@@ -39,6 +39,10 @@ import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.TilesOverlay
 import java.io.IOException
 
+import com.google.gson.Gson
+import okhttp3.OkHttpClient
+import okhttp3.Request
+
 
 class MapActivity : AppCompatActivity() {
     private lateinit var mFusedLocationProviderClient: FusedLocationProviderClient
@@ -290,7 +294,7 @@ class MapActivity : AppCompatActivity() {
     private fun longPressOnMap(p: GeoPoint) {
 
         val address = getLocationName(p.latitude, p.longitude)
-        val myIcon = combineDrawableWithText(resources.getDrawable(R.drawable.baseline_location_on_24, this.theme), getLocationName(p.latitude, p.longitude))
+        val myIcon = combineDrawableWithText(resources.getDrawable(R.drawable.baseline_location_on_24, this.theme), getAddressFromCoordinates(p.latitude, p.longitude))
         longPressedMarkerEnd?.let { map!!.overlays.remove(it) }
         longPressedMarkerEnd = createMarkerWithDrawable(p, address, null, myIcon)
         longPressedMarkerEnd?.let { map!!.overlays.add(it) }
@@ -305,7 +309,8 @@ class MapActivity : AppCompatActivity() {
                     val startPoint = GeoPoint(location.latitude, location.longitude);
                     Log.i("LOCATION", "onSuccess location:" + location.latitude + " - " + location.longitude)
                     val address = getLocationName(location.latitude, location.longitude)
-                    val myIcon = combineDrawableWithText(resources.getDrawable(R.drawable.baseline_location_on_24, this.theme), getLocationName(location.latitude, location.longitude))
+                    //val myIcon = combineDrawableWithText(resources.getDrawable(R.drawable.baseline_location_on_24, this.theme), getLocationName(location.latitude, location.longitude))
+                    val myIcon = combineDrawableWithText(resources.getDrawable(R.drawable.baseline_location_on_24, this.theme), getAddressFromCoordinates(location.latitude, location.longitude))
 
                     longPressedMarkerOrigin?.let { map!!.overlays.remove(it) }
                     longPressedMarkerOrigin = createMarkerWithDrawable(startPoint, address, "INICIO", myIcon)
@@ -317,7 +322,6 @@ class MapActivity : AppCompatActivity() {
                 }
             }
         }
-        //map!!.invalidate();
     }
 
     private fun createMarker(p: GeoPoint, title: String?, desc: String?, iconID: Int): Marker? {
@@ -390,34 +394,60 @@ class MapActivity : AppCompatActivity() {
     }
 
     fun combineDrawableWithText(drawable: Drawable, text: String): Drawable {
-        val paddingVertical = 50 // Adjust padding as needed
-        val paddingHorizontal = 50 // Adjust padding as needed
-        val textSize = 20f
+        val paddingVertical = 40
+        val paddingHorizontal = 200
+        val textSize = 16f
 
-        // Calculate total width and height including padding
+        // Calcula ancho y alto total junto con el borde definido
         val totalWidth = drawable.intrinsicWidth + paddingHorizontal * 2
         val totalHeight = drawable.intrinsicHeight + paddingVertical * 2 + textSize
 
         val bitmap = Bitmap.createBitmap(totalWidth, totalHeight.toInt(), Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
-        // Draw the drawable centered horizontally
+        // Dibujar el Drawable centrado horizontalmente
         val drawableLeft = (totalWidth - drawable.intrinsicWidth) / 2
         val drawableTop = paddingVertical
         drawable.setBounds(drawableLeft, drawableTop, drawableLeft + drawable.intrinsicWidth, drawableTop + drawable.intrinsicHeight)
         drawable.draw(canvas)
 
-        // Draw the text centered horizontally at the bottom
+        // Dibujar el texto centrado
         val paint = Paint()
-        paint.color = Color.BLACK  // Set text color to black
+        paint.color = Color.BLACK
         paint.textSize = textSize
         paint.isAntiAlias = true
-        val textWidth = paint.measureText(text)
+
+        val indiceMedio = text.length / 2
+        val primerLinea = text.substring(0, indiceMedio)
+
+        val textWidth = paint.measureText(primerLinea)
         val textX = (totalWidth - textWidth) / 2
         val textY = (totalHeight - paddingVertical / 2) - 25
-        canvas.drawText(text, textX, textY, paint)
+        canvas.drawText(primerLinea, textX, textY, paint)
 
         return BitmapDrawable(resources, bitmap)
+    }
+
+    //ALTERNATIVA A GEOCODER
+    fun getAddressFromCoordinates(latitude: Double, longitude: Double): String {
+        val client = OkHttpClient()
+        val url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=17&addressdetails=1"
+
+        val request = Request.Builder()
+            .url(url)
+            .build()
+
+        val response = client.newCall(request).execute()
+        val responseBody = response.body?.string()
+
+        var displayName = ""
+
+        // Procesado del json recibido especificando el atributo requerido
+        val gson = Gson()
+        val jsonObject = gson.fromJson(responseBody, com.google.gson.JsonObject::class.java)
+        displayName = jsonObject.getAsJsonPrimitive("display_name").asString
+
+        return displayName
     }
 
 }
