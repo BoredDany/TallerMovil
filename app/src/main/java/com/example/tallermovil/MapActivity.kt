@@ -2,7 +2,13 @@ package com.example.tallermovil
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -15,26 +21,24 @@ import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
-import org.osmdroid.views.MapView
 import org.osmdroid.config.Configuration.*
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.TilesOverlay
 import java.io.IOException
+
 
 class MapActivity : AppCompatActivity() {
     private lateinit var mFusedLocationProviderClient: FusedLocationProviderClient
@@ -50,7 +54,8 @@ class MapActivity : AppCompatActivity() {
     lateinit var roadManager: RoadManager
     private var roadOverlay: Polyline? = null
 
-    private var longPressedMarker: Marker? = null
+    private var longPressedMarkerOrigin: Marker? = null
+    private var longPressedMarkerEnd: Marker? = null
 
     //Geocoder
     var mGeocoder: Geocoder? = null
@@ -89,7 +94,7 @@ class MapActivity : AppCompatActivity() {
         mLightSensorListener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent?) {
 
-                if (event!!.values[0] < 12) {
+                if (event!!.values[0] < 16) {
                     darkModeLum = true
                     map!!.overlayManager.tilesOverlay.setColorFilter(TilesOverlay.INVERT_COLORS)
 
@@ -283,25 +288,28 @@ class MapActivity : AppCompatActivity() {
     }
 
     private fun longPressOnMap(p: GeoPoint) {
-        longPressedMarker?.let { map!!.overlays.remove(it) }
-        val address = getLocationName(p.latitude, p.longitude)
-        longPressedMarker = createMarker(p, address, null, R.drawable.baseline_location_on_24)
-        longPressedMarker?.let { map!!.overlays.add(it) }
 
+        val address = getLocationName(p.latitude, p.longitude)
+        val myIcon = combineDrawableWithText(resources.getDrawable(R.drawable.baseline_location_on_24, this.theme), getLocationName(p.latitude, p.longitude))
+        longPressedMarkerEnd?.let { map!!.overlays.remove(it) }
+        longPressedMarkerEnd = createMarkerWithDrawable(p, address, null, myIcon)
+        longPressedMarkerEnd?.let { map!!.overlays.add(it) }
+        val mapController = map!!.controller
+        mapController.setCenter(p);
 
         if (checkLocationPermission()) {
             mFusedLocationProviderClient.lastLocation.addOnSuccessListener(this) { location ->
-                Log.i("LOCATION", "onSuccess location")
                 if (location != null) {
-                    val mapController = map!!.controller
-                    val startPoint = GeoPoint(location.latitude, location.longitude);
-                    mapController.setCenter(startPoint);
+                    Log.i("LOCATION", "onSuccess location")
 
+                    val startPoint = GeoPoint(location.latitude, location.longitude);
                     Log.i("LOCATION", "onSuccess location:" + location.latitude + " - " + location.longitude)
                     val address = getLocationName(location.latitude, location.longitude)
+                    val myIcon = combineDrawableWithText(resources.getDrawable(R.drawable.baseline_location_on_24, this.theme), getLocationName(location.latitude, location.longitude))
 
-                    longPressedMarker = createMarker(startPoint, address, null, R.drawable.baseline_location_on_24)
-                    longPressedMarker?.let { map!!.overlays.add(it) }
+                    longPressedMarkerOrigin?.let { map!!.overlays.remove(it) }
+                    longPressedMarkerOrigin = createMarkerWithDrawable(startPoint, address, "INICIO", myIcon)
+                    longPressedMarkerOrigin?.let { map!!.overlays.add(it) }
 
                     drawRoute(startPoint,p)
                 } else {
@@ -309,6 +317,7 @@ class MapActivity : AppCompatActivity() {
                 }
             }
         }
+        //map!!.invalidate();
     }
 
     private fun createMarker(p: GeoPoint, title: String?, desc: String?, iconID: Int): Marker? {
@@ -324,6 +333,21 @@ class MapActivity : AppCompatActivity() {
             marker.position = p
             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         }
+
+        return marker
+    }
+
+    private fun createMarkerWithDrawable(p: GeoPoint, title: String?, desc: String?, icon: Drawable?): Marker? {
+        var marker: Marker? = null
+        if (map != null) {
+            marker = Marker(map)
+            title?.let { marker.title = it }
+            desc?.let { marker.subDescription = it }
+            marker.icon = icon  // Set the icon directly using the provided Drawable
+            marker.position = p
+            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+        }
+
         return marker
     }
 
@@ -346,7 +370,7 @@ class MapActivity : AppCompatActivity() {
     }
 
     private fun getLocationName (latitude: Double, longitude: Double): String{
-        var addressFound = ""
+        var addressFound = "null"
         try {
             val maxResults = 1
             val addresses = mGeocoder?.getFromLocation(latitude, longitude, maxResults)
@@ -364,4 +388,36 @@ class MapActivity : AppCompatActivity() {
         }
         return addressFound
     }
+
+    fun combineDrawableWithText(drawable: Drawable, text: String): Drawable {
+        val paddingVertical = 50 // Adjust padding as needed
+        val paddingHorizontal = 50 // Adjust padding as needed
+        val textSize = 20f
+
+        // Calculate total width and height including padding
+        val totalWidth = drawable.intrinsicWidth + paddingHorizontal * 2
+        val totalHeight = drawable.intrinsicHeight + paddingVertical * 2 + textSize
+
+        val bitmap = Bitmap.createBitmap(totalWidth, totalHeight.toInt(), Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        // Draw the drawable centered horizontally
+        val drawableLeft = (totalWidth - drawable.intrinsicWidth) / 2
+        val drawableTop = paddingVertical
+        drawable.setBounds(drawableLeft, drawableTop, drawableLeft + drawable.intrinsicWidth, drawableTop + drawable.intrinsicHeight)
+        drawable.draw(canvas)
+
+        // Draw the text centered horizontally at the bottom
+        val paint = Paint()
+        paint.color = Color.BLACK  // Set text color to black
+        paint.textSize = textSize
+        paint.isAntiAlias = true
+        val textWidth = paint.measureText(text)
+        val textX = (totalWidth - textWidth) / 2
+        val textY = (totalHeight - paddingVertical / 2) - 25
+        canvas.drawText(text, textX, textY, paint)
+
+        return BitmapDrawable(resources, bitmap)
+    }
+
 }
