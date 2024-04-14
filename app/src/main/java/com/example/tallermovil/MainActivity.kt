@@ -25,6 +25,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         mapBtn.setOnClickListener {
+            val intent = Intent(this, MapActivity::class.java)
+            startActivity(intent)
 
         }
 
