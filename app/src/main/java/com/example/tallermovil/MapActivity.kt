@@ -340,6 +340,8 @@ class MapActivity : AppCompatActivity() {
             roadOverlay?.outlinePaint?.color = Color.RED
             roadOverlay?.outlinePaint?.strokeWidth = 10f
             map!!.overlays.add(roadOverlay)
+
+            Toast.makeText(this, "Distancia de la ruta: ${road.mLength} km", Toast.LENGTH_LONG).show()
         }
     }
 
