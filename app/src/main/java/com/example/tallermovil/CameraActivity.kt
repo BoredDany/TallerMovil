@@ -28,7 +28,7 @@ class CameraActivity : AppCompatActivity() {
             if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
                 takePic()
             }else{
-                Toast.makeText(this, "No hay permiso de galeria", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "No hay permiso de camara", Toast.LENGTH_SHORT).show()
                 requestPermissions(
                     arrayOf(android.Manifest.permission.CAMERA),
                     Permission.MY_PERMISSION_REQUEST_CAMERA)
