@@ -22,15 +22,31 @@ class CameraActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
 
-        //pedir permisos de camara y galeria
-        permisoCamara()
-        permisoGaleria()
-
         val btnCamera = findViewById<Button>(R.id.camBtn)
-        btnCamera.setOnClickListener { takePic() }
+        btnCamera.setOnClickListener {
+            permisoCamara()
+            if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
+                takePic()
+            }else{
+                Toast.makeText(this, "No hay permiso de galeria", Toast.LENGTH_SHORT).show()
+                requestPermissions(
+                    arrayOf(android.Manifest.permission.CAMERA),
+                    Permission.MY_PERMISSION_REQUEST_CAMERA)
+            }
+        }
 
         val btnGallery = findViewById<Button>(R.id.gallerybtn)
-        btnGallery.setOnClickListener { selectPhoto () }
+        btnGallery.setOnClickListener {
+            permisoGaleria()
+            if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED){
+                selectPhoto()
+            }else{
+                Toast.makeText(this, "No hay permiso de galeria", Toast.LENGTH_SHORT).show()
+                requestPermissions(
+                    arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES),
+                    Permission.MY_PERMISSION_REQUEST_GALLERY)
+            }
+        }
 
     }
 
@@ -62,22 +78,22 @@ class CameraActivity : AppCompatActivity() {
     fun permisoGaleria(){
         when {
             ContextCompat.checkSelfPermission(
-                this, android.Manifest.permission.READ_EXTERNAL_STORAGE
+                this, android.Manifest.permission.READ_MEDIA_IMAGES
             ) == PackageManager.PERMISSION_GRANTED -> {
                 Toast.makeText(this, "Permiso de galería concedido", Toast.LENGTH_SHORT).show()
             }
             ActivityCompat.shouldShowRequestPermissionRationale(
-                this, android.Manifest.permission.READ_EXTERNAL_STORAGE
+                this, android.Manifest.permission.READ_MEDIA_IMAGES
             ) -> {
                 Toast.makeText(this, "La aplicación necesita acceso a la galería para seleccionar fotos", Toast.LENGTH_SHORT).show()
                 requestPermissions(
-                    arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
+                    arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES),
                     Permission.MY_PERMISSION_REQUEST_GALLERY
                 )
             }
             else -> {
                 requestPermissions(
-                    arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
+                    arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES),
                     Permission.MY_PERMISSION_REQUEST_GALLERY
                 )
             }
@@ -85,7 +101,7 @@ class CameraActivity : AppCompatActivity() {
     }
 
     fun selectPhoto () {
-        val permissionCheck = ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)
+        val permissionCheck = ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES)
         if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
             val pickImage = Intent(Intent.ACTION_PICK)
             pickImage.type = "image/*"
@@ -155,8 +171,6 @@ class CameraActivity : AppCompatActivity() {
             }
         }
     }
-
-
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
