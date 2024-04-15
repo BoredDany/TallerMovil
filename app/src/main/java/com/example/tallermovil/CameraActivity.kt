@@ -25,27 +25,11 @@ class CameraActivity : AppCompatActivity() {
         val btnCamera = findViewById<Button>(R.id.camBtn)
         btnCamera.setOnClickListener {
             permisoCamara()
-            if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
-                takePic()
-            }else{
-                Toast.makeText(this, "No hay permiso de camara", Toast.LENGTH_SHORT).show()
-                requestPermissions(
-                    arrayOf(android.Manifest.permission.CAMERA),
-                    Permission.MY_PERMISSION_REQUEST_CAMERA)
-            }
         }
 
         val btnGallery = findViewById<Button>(R.id.gallerybtn)
         btnGallery.setOnClickListener {
             permisoGaleria()
-            if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED){
-                selectPhoto()
-            }else{
-                Toast.makeText(this, "No hay permiso de galeria", Toast.LENGTH_SHORT).show()
-                requestPermissions(
-                    arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES),
-                    Permission.MY_PERMISSION_REQUEST_GALLERY)
-            }
         }
 
     }
@@ -56,7 +40,7 @@ class CameraActivity : AppCompatActivity() {
             ContextCompat.checkSelfPermission(
                 this, android.Manifest.permission.CAMERA
             ) == PackageManager.PERMISSION_GRANTED -> {
-                Toast.makeText(this, "Hay permiso de camara", Toast.LENGTH_SHORT).show()
+                takePic()
             }
             ActivityCompat.shouldShowRequestPermissionRationale(
                 this, android.Manifest.permission.CAMERA) -> {
@@ -80,7 +64,7 @@ class CameraActivity : AppCompatActivity() {
             ContextCompat.checkSelfPermission(
                 this, android.Manifest.permission.READ_MEDIA_IMAGES
             ) == PackageManager.PERMISSION_GRANTED -> {
-                Toast.makeText(this, "Permiso de galería concedido", Toast.LENGTH_SHORT).show()
+                selectPhoto()
             }
             ActivityCompat.shouldShowRequestPermissionRationale(
                 this, android.Manifest.permission.READ_MEDIA_IMAGES
@@ -180,14 +164,16 @@ class CameraActivity : AppCompatActivity() {
 
                 // If request is cancelled, the result arrays are empty.
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    Toast.makeText(this, "Permiso camara", Toast.LENGTH_SHORT).show()
+                    takePic()
+                    Toast.makeText(this, "Permiso de camara concedido", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(this, "Permiso camara negado", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Permiso de camara negado", Toast.LENGTH_SHORT).show()
 
                 }
             }
             Permission.MY_PERMISSION_REQUEST_GALLERY -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    selectPhoto()
                     Toast.makeText(this, "Permiso de galería concedido", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(this, "Permiso de galería denegado", Toast.LENGTH_SHORT).show()
