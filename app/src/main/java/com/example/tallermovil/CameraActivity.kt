@@ -62,37 +62,38 @@ class CameraActivity : AppCompatActivity() {
     fun permisoGaleria(){
         when {
             ContextCompat.checkSelfPermission(
-                this, android.Manifest.permission.READ_MEDIA_IMAGES
+                this, android.Manifest.permission.READ_EXTERNAL_STORAGE
             ) == PackageManager.PERMISSION_GRANTED -> {
                 selectPhoto()
             }
             ActivityCompat.shouldShowRequestPermissionRationale(
-                this, android.Manifest.permission.READ_MEDIA_IMAGES
+                this, android.Manifest.permission.READ_EXTERNAL_STORAGE
             ) -> {
                 Toast.makeText(this, "La aplicación necesita acceso a la galería para seleccionar fotos", Toast.LENGTH_SHORT).show()
                 requestPermissions(
-                    arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES),
+                    arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
                     Permission.MY_PERMISSION_REQUEST_GALLERY
                 )
             }
             else -> {
                 requestPermissions(
-                    arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES),
+                    arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
                     Permission.MY_PERMISSION_REQUEST_GALLERY
                 )
             }
         }
     }
 
+
     fun selectPhoto () {
-        val permissionCheck = ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES)
+        val permissionCheck = ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)
         if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
             val pickImage = Intent(Intent.ACTION_PICK)
             pickImage.type = "image/*"
             startActivityForResult(pickImage, Permission.IMAGE_PICKER_REQUEST)
         } else {
             Toast.makeText(this, "No hay permiso de galeria", Toast.LENGTH_SHORT).show()
-            requestPermissions(arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES),
+            requestPermissions(arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
                 Permission.MY_PERMISSION_REQUEST_GALLERY)
         }
     }
