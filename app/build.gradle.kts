@@ -51,4 +51,7 @@ dependencies {
     implementation ("com.github.MKergall:osmbonuspack:6.9.0")
     implementation ("com.squareup.okhttp3:okhttp:3.2.0")
 
+    implementation ("com.github.bumptech.glide:glide:4.12.0")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.12.0")
+
 }

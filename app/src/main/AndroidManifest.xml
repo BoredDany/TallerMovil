@@ -26,6 +26,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TallerMovil"
         tools:targetApi="31">
+
         <activity
             android:name=".MapActivity"
             android:exported="false" />

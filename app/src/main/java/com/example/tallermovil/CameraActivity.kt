@@ -5,6 +5,7 @@ import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -15,6 +16,8 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import java.io.FileNotFoundException
 
 class CameraActivity : AppCompatActivity() {
@@ -128,11 +131,13 @@ class CameraActivity : AppCompatActivity() {
             Permission.IMAGE_PICKER_REQUEST ->{
                 if(resultCode == Activity.RESULT_OK){
                     try {
-                        //Logica de seleccion de imagen
-                        val selectedImageUri = data!!.data
-                        if(data.data != null){
+                        if(data!!.data != null){
+                            val selectedImageUri = data.data
                             val imageView = findViewById<ImageView>(R.id.photo)
-                            imageView.setImageURI(selectedImageUri)
+                            Glide.with(this)
+                                .load(selectedImageUri)
+                                .centerCrop()
+                                .into(imageView)
                         }
                     } catch (e: FileNotFoundException){
                         e.printStackTrace()
@@ -143,7 +148,11 @@ class CameraActivity : AppCompatActivity() {
                 if (requestCode == Permission.REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
                     val imageBitmap = data?.extras?.get("data") as Bitmap
                     val imgProfile = findViewById<ImageView>(R.id.photo)
-                    imgProfile.setImageBitmap(imageBitmap)
+                    Glide.with(this)
+                        .load(imageBitmap)
+                        .downsample(DownsampleStrategy.NONE)
+                        .centerCrop()
+                        .into(imgProfile)
 
                     //guardar
                     val imageUri = saveImageToGallery(imageBitmap)
