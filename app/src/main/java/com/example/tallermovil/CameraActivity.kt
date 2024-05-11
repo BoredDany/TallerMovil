@@ -18,13 +18,12 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import com.example.tallermovil.Permission.Companion.MY_PERMISSION_REQUEST_CAMERA
 import com.example.tallermovil.Permission.Companion.REQUEST_IMAGE_CAPTURE
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.text.DateFormat.getDateInstance
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -176,23 +175,20 @@ class CameraActivity : AppCompatActivity() {
     private fun takePic() {
         val permissionCheck = ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA)
         val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        val imageFileName = "${getDateInstance().format(Date())}.jpg"
         if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+            val imageFile =
+                File(getExternalFilesDir(Environment.DIRECTORY_PICTURES).toString() + "/" + imageFileName)
+            photoUri = FileProvider.getUriForFile(
+                this,
+                "com.example.taller.fileprovider",
+                imageFile
+            )
             if (takePictureIntent.resolveActivity(packageManager) != null) {
-                val photoFile: File? = try {
-                    createImageFile()
-                } catch (ex: IOException) {
-                    ex.printStackTrace()
-                    null
-                }
-                photoFile?.also {
-                    photoUri = FileProvider.getUriForFile(
-                        this,
-                        "com.example.myapp.fileprovider",
-                        it
-                    )
-                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
-                    startActivityForResult(takePictureIntent, Permission.REQUEST_IMAGE_CAPTURE)
-                }
+
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
+                startActivityForResult(takePictureIntent, Permission.REQUEST_IMAGE_CAPTURE)
+
             } else {
                 Toast.makeText(this, "No hay una cámara disponible en este dispositivo", Toast.LENGTH_SHORT).show()
             }
