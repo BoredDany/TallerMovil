@@ -3,7 +3,6 @@ package com.example.tallermovil
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -26,6 +25,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.gson.Gson
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.config.Configuration.*
@@ -38,10 +40,8 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.TilesOverlay
 import java.io.IOException
-
-import com.google.gson.Gson
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import kotlin.math.*
+import kotlin.random.Random
 
 
 class MapActivity : AppCompatActivity() {
@@ -60,6 +60,10 @@ class MapActivity : AppCompatActivity() {
 
     private var longPressedMarkerOrigin: Marker? = null
     private var longPressedMarkerEnd: Marker? = null
+
+    private var  markerBump: Marker? = null
+    private var markerBumpList: MutableList<Marker> = mutableListOf()
+
 
     //Geocoder
     var mGeocoder: Geocoder? = null
@@ -94,11 +98,56 @@ class MapActivity : AppCompatActivity() {
         var darkModeLum: Boolean = false
         var lightModeLum: Boolean = true
 
+        markerBump = createMarker(GeoPoint(4.718545, -74.032458), "", null, R.drawable.baseline_location_on_24)
+        markerBump?.let { map!!.overlays.add(it) }
+        markerBumpList.add(markerBump!!)
+
+        markerBump = createMarker(GeoPoint(4.715806, -74.032535), "", null, R.drawable.baseline_location_on_24)
+        markerBump?.let { map!!.overlays.add(it) }
+        markerBumpList.add(markerBump!!)
+
+        markerBump = createMarker(GeoPoint(4.628663, -74.065137), "", null, R.drawable.baseline_location_on_24)
+        markerBump?.let { map!!.overlays.add(it) }
+        markerBumpList.add(markerBump!!)
+
+        markerBump = createMarker(GeoPoint(4.628791, -74.065899), "", null, R.drawable.baseline_location_on_24)
+        markerBump?.let { map!!.overlays.add(it) }
+        markerBumpList.add(markerBump!!)
+
+        markerBump = createMarker(GeoPoint(4.627728, -74.067147), "", null, R.drawable.baseline_location_on_24)
+        markerBump?.let { map!!.overlays.add(it) }
+        markerBumpList.add(markerBump!!)
+
+        markerBump = createMarker(GeoPoint(4.625932, -74.067475), "", null, R.drawable.baseline_location_on_24)
+        markerBump?.let { map!!.overlays.add(it) }
+        markerBumpList.add(markerBump!!)
+
+        markerBump = createMarker(GeoPoint(4.631905, -74.065597), "", null, R.drawable.baseline_location_on_24)
+        markerBump?.let { map!!.overlays.add(it) }
+        markerBumpList.add(markerBump!!)
+
+        markerBump = createMarker(GeoPoint(4.627314, -74.065449), "", null, R.drawable.baseline_location_on_24)
+        markerBump?.let { map!!.overlays.add(it) }
+        markerBumpList.add(markerBump!!)
+
+        markerBump = createMarker(GeoPoint(4.625994, -74.065750), "", null, R.drawable.baseline_location_on_24)
+        markerBump?.let { map!!.overlays.add(it) }
+        markerBumpList.add(markerBump!!)
+
+        markerBump = createMarker(GeoPoint(4.624486, -74.066098), "", null, R.drawable.baseline_location_on_24)
+        markerBump?.let { map!!.overlays.add(it) }
+        markerBumpList.add(markerBump!!)
+
+
+
+
+
+
 
         mLightSensorListener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent?) {
 
-                if (event!!.values[0] < 16) {
+                if (event!!.values[0] < 8) {
                     darkModeLum = true
                     map!!.overlayManager.tilesOverlay.setColorFilter(TilesOverlay.INVERT_COLORS)
 
@@ -356,21 +405,97 @@ class MapActivity : AppCompatActivity() {
     }
 
     private fun drawRoute(start: GeoPoint, finish: GeoPoint) {
-        val routePoints = ArrayList<GeoPoint>()
+        var routePoints = ArrayList<GeoPoint>()
+        var routePointsForRoute = ArrayList<GeoPoint>()
+        var routeWithBump: Boolean
         routePoints.add(start)
         routePoints.add(finish)
-        val road = roadManager.getRoad(routePoints)
-        Log.i("OSM_acticity", "Route length: ${road.mLength} klm")
-        Log.i("OSM_acticity", "Duration: ${road.mDuration / 60} min")
+
+        //routePoints.add(GeoPoint(4.751933, -74.048018))
+
+        var roadAux = roadManager.getRoad(routePoints)
+        do {
+            routeWithBump = false
+            for (j in 0 until markerBumpList.size) {
+                for (i in 0 until roadAux.mNodes.size) {
+                    //SI UNO DE LOS NODOS DE LA RUTA SE ENCUENTRA CERCA AL HUECO, LA RUTA SE CORTA DESDE ESE PUNTO Y SE REASIGNA A UNA POSICION LEJANA
+                    //Y NO ESTA CERCA AL PUNTO FINAL
+                    if (bumpProximityDetector(
+                            markerBumpList.get(j).position,
+                            roadAux.mNodes.get(i).mLocation
+                        ) && !bumpProximityDetector(finish, roadAux.mNodes.get(i).mLocation) && !bumpProximityDetector(start, roadAux.mNodes.get(i).mLocation)
+                    ) {
+                        Log.i("DISTANCE BUMP:" + j.toString() + "Route:" + i.toString(), calculateDistance(markerBumpList.get(j).position, roadAux.mNodes.get(i).mLocation).toString())
+                        routeWithBump = true
+                        Log.i("OLDPOINT", roadAux.mNodes.get(i).mLocation.toString())
+                        val newPoint = generateRandomPoint(roadAux.mNodes.get(i).mLocation, 1.0)
+                        Log.i("NEWPOINT", newPoint.toString())
+
+                        routePoints.clear()
+                        routePoints.add(start)
+                        //2 llenar routePoints con los nodos de road del roadManager
+                        for (k in 0 until i) {
+                            routePoints.add(roadAux.mNodes.get(k).mLocation)
+                        }
+                        routePoints.add(newPoint)
+                        routePoints.add(finish)
+                        break
+                        //routePoints = drawRouteAux(finish, routePoints)
+                        //Log.i("SE ROMPIO EL CICLO J???", " " + j.toString())
+                        //Log.i("SE ROMPIO EL CICLO i???", " " + i.toString())
+                    }
+                }
+                if (routeWithBump){
+                    roadAux = roadManager.getRoad(routePoints)
+                    break
+                }
+            }
+
+        }while (routeWithBump)
+
+        //val road = roadManager.getRoad(routePointsForRoute)
+        for (i in 0 until roadAux.mNodes.size) {
+            Log.i("ROUTEDISTANCIAPOST", calculateDistance(markerBump!!.position, roadAux.mNodes.get(i).mLocation).toString())
+        }
+
+
+        Log.i("OSM_acticity", "Route length: ${roadAux.mLength} klm")
+        Log.i("OSM_acticity", "Duration: ${roadAux.mDuration / 60} min")
         if (map != null) {
             roadOverlay?.let { map!!.overlays.remove(it) }
-            roadOverlay = RoadManager.buildRoadOverlay(road)
+            roadOverlay = RoadManager.buildRoadOverlay(roadAux)
             roadOverlay?.outlinePaint?.color = Color.RED
             roadOverlay?.outlinePaint?.strokeWidth = 10f
             map!!.overlays.add(roadOverlay)
 
-            Toast.makeText(this, "Distancia de la ruta: ${road.mLength} km", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Distancia de la ruta: ${roadAux.mLength} km", Toast.LENGTH_LONG).show()
         }
+    }
+
+    private fun drawRouteAux(finish: GeoPoint, routePointsList: ArrayList<GeoPoint>) : ArrayList<GeoPoint>{
+        routePointsList.add(finish)
+        val road = roadManager.getRoad(routePointsList)
+
+        for (j in 0 until markerBumpList.size) {
+            for (i in 0 until road.mNodes.size) {
+                if (bumpProximityDetector(markerBumpList.get(j).position, road.mNodes.get(i).mLocation) && !bumpProximityDetector(finish, road.mNodes.get(i).mLocation)) {
+                    val newPoint = generateRandomPoint(road.mNodes.get(i).mLocation, 0.6)
+                    routePointsList.clear()
+                    for (k in 0 until i) {
+                        routePointsList.add(road.mNodes.get(k).mLocation)
+                    }
+                    routePointsList.add(newPoint)
+                    return drawRouteAux(finish, routePointsList)
+                }
+            }
+            Log.i("SALI DE i", " SALIII ")
+        }
+        routePointsList.clear()
+        for (i in 0 until road.mNodes.size) {
+            routePointsList.add(road.mNodes.get(i).mLocation)
+        }
+
+        return routePointsList
     }
 
     private fun getLocationName (latitude: Double, longitude: Double): String{
@@ -429,7 +554,7 @@ class MapActivity : AppCompatActivity() {
     }
 
     //ALTERNATIVA A GEOCODER
-    fun getAddressFromCoordinates(latitude: Double, longitude: Double): String {
+    fun getAddressFromCoordinates1(latitude: Double, longitude: Double): String {
         val client = OkHttpClient()
         val url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=17&addressdetails=1"
 
@@ -448,6 +573,52 @@ class MapActivity : AppCompatActivity() {
         displayName = jsonObject.getAsJsonPrimitive("display_name").asString
 
         return displayName
+    }
+
+    fun getAddressFromCoordinates(latitude: Double, longitude: Double): String {
+        var displayName = ""
+        return displayName
+    }
+
+    fun bumpProximityDetector(point1: GeoPoint, point2: GeoPoint): Boolean {
+        if(calculateDistance(point1, point2) <= 0.4){
+            return true
+        }
+        return false
+    }
+
+    fun calculateDistance(point1: GeoPoint, point2: GeoPoint): Double {
+        val earthRadius = 6371.0 // radius in kilometers
+
+        val latDiff = Math.toRadians(point2.latitude - point1.latitude)
+        val lonDiff = Math.toRadians(point2.longitude - point1.longitude)
+
+        val a = sin(latDiff / 2).pow(2.0) +
+                cos(Math.toRadians(point1.latitude)) * cos(Math.toRadians(point2.latitude)) *
+                sin(lonDiff / 2).pow(2.0)
+
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+        return earthRadius * c
+    }
+
+    fun generateRandomPoint(initialPoint: GeoPoint, distance: Double): GeoPoint {
+        val radius = 6371.0 // Earth's radius in kilometers
+        val bearing = Random.nextDouble(2 * PI) // Random direction
+        val angularDistance = distance / radius // The angular distance
+
+        val lat1 = Math.toRadians(initialPoint.latitude)
+        val lon1 = Math.toRadians(initialPoint.longitude)
+
+        val lat2 = asin(sin(lat1) * cos(angularDistance) +
+                cos(lat1) * sin(angularDistance) * cos(bearing))
+
+        var lon2 = lon1 + atan2(sin(bearing) * sin(angularDistance) * cos(lat1),
+            cos(angularDistance) - sin(lat1) * sin(lat2))
+
+        lon2 = (lon2 + 3 * PI) % (2 * PI) - PI // Normalize to -180..+180
+
+        return GeoPoint(Math.toDegrees(lat2), Math.toDegrees(lon2))
     }
 
 }
